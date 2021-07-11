@@ -1,6 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using AutoMapper;
-using CustomIdentity.BLL.Extensions;
+using CustomIdentity.BLL.Models;
 using CustomIdentity.BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,6 +21,36 @@ namespace CustomIdentity.Controllers
         public IActionResult GetAllRoles()
         {
             return Ok(_roleService.GetAllRolesAsync());
+        }
+
+        [HttpGet]
+        public IActionResult GetRolesForUser(Guid userId)
+        {
+            return Ok(_roleService.GetRolesForUser(userId));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateRole(string roleName)
+        {
+            await _roleService.CreateRoleAsync(roleName);
+
+            return Ok();
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> ChangeUserRoles(UserRolesUpdateModel updateModel)
+        {
+            await _roleService.AddOrUpdateUserRolesAsync(updateModel);
+
+            return Ok();
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteRole(int roleId)
+        {
+            await _roleService.DeleteRoleAsync(roleId);
+
+            return Ok();
         }
     }
 }
