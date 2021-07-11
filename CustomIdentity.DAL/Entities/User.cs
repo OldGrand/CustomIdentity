@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CustomIdentity.DAL.Entities.Interfaces;
 using Microsoft.AspNetCore.Identity;
 
@@ -31,5 +32,8 @@ namespace CustomIdentity.DAL.Entities
         public bool TwoFactorEnabled { get; set; }
         
         public int AccessFailedCount { get; set; }
+
+        public ICollection<UserRole> UserRoles { get; set; }
+        public ICollection<UserClaimAssociative> UserClaims { get; set; }
     }
 }

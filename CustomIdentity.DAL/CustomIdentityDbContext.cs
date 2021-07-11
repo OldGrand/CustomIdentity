@@ -16,10 +16,12 @@ namespace CustomIdentity.DAL
         public DbSet<UserLogin> UserLogins { get; set; }
         public DbSet<UserClaimAssociative> UserClaimAssociatives { get; set; }
         public DbSet<UserClaim> UserClaims { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<RoleClaim> RoleClaims { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
 
         public CustomIdentityDbContext(DbContextOptions options) : base(options)
         {
-            Database.EnsureCreatedAsync().GetAwaiter().GetResult();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -37,7 +39,6 @@ namespace CustomIdentity.DAL
                 b.HasKey(u => u.Id);
                 b.HasIndex(u => u.NormalizedUserName).IsUnique();
                 b.HasIndex(u => u.NormalizedEmail);
-                b.ToTable("AspNetUsers");
                 b.Property(u => u.ConcurrencyStamp).IsConcurrencyToken();
 
                 b.Property(u => u.UserName).HasMaxLength(256);
@@ -70,8 +71,29 @@ namespace CustomIdentity.DAL
                     b.Property(l => l.LoginProvider).HasMaxLength(maxKeyLength);
                     b.Property(l => l.ProviderKey).HasMaxLength(maxKeyLength);
                 }
+            });
 
-                b.ToTable("AspNetUserLogins");
+            modelBuilder.Entity<UserRole>(b =>
+            {
+                b.HasKey(ur => new
+                {
+                    ur.RoleId,
+                    ur.UserId
+                });
+            });
+
+            modelBuilder.Entity<RoleClaim>(b =>
+            {
+                b.HasKey(ur => new
+                {
+                    ur.RoleId,
+                    ur.UserClaimId
+                });
+            });
+
+            modelBuilder.Entity<Role>(b =>
+            {
+                b.HasIndex(r => r.Title).IsUnique();
             });
         }
 
