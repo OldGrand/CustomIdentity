@@ -60,6 +60,8 @@ namespace CustomIdentity
 
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<ITokenGeneratorService, TokenGeneratorService>();
+            services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IClaimService, ClaimService>();
 
             services.AddAutoMapper(typeof(BusinessLogicLayerModelsProfile));
 
