@@ -22,6 +22,7 @@ namespace CustomIdentity.DAL
 
         public CustomIdentityDbContext(DbContextOptions options) : base(options)
         {
+            Database.EnsureCreatedAsync().GetAwaiter().GetResult();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
