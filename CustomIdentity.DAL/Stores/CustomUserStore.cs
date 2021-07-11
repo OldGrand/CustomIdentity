@@ -356,7 +356,7 @@ namespace CustomIdentity.DAL.Stores
                 UserClaimId = uc.Id
             });
 
-            await _userClaimAssociatives.AddRangeAsync(userClaimAssociativesToCreate);
+            await _userClaimAssociatives.AddRangeAsync(userClaimAssociativesToCreate, cancellationToken);
         }
 
         public async Task ReplaceClaimAsync(User user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
