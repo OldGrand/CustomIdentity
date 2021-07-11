@@ -33,16 +33,20 @@ namespace CustomIdentity.BLL.Services.Implementation
             _userClaims = _dbContext.UserClaims;
         }
 
-        public async Task AddOrUpdateClaimsToRoleAsync(int roleId, IEnumerable<int> claimIds)
+        public async Task AddOrUpdateClaimsToRoleAsync(RoleClaimsUpdateModel model)
         {
-            var claimsIdList = claimIds?.ToList();
-
-            if (claimsIdList == null || !claimsIdList.Any())
+            if (model == null)
             {
-                throw new ArgumentNullException(nameof(claimIds));
+                throw new ArgumentNullException(nameof(model));
             }
 
-            var roleEntity = await _roles.FirstAsync(r => r.Id == roleId);
+            var claimsIdList = model.ClaimIds?.ToList();
+            if (claimsIdList == null || !claimsIdList.Any())
+            {
+                throw new ArgumentNullException(nameof(model.ClaimIds));
+            }
+
+            var roleEntity = await _roles.FirstAsync(r => r.Id == model.RoleId);
 
             var isAllNewClaimIdsExist = await _userClaims.AllAsync(x => claimsIdList.Contains(x.Id));
             if (!isAllNewClaimIdsExist)
@@ -90,11 +94,22 @@ namespace CustomIdentity.BLL.Services.Implementation
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteRoleAsync(int roleId)
+        public Task DeleteRoleAsync(int roleId)
         {
-            var existedRole = await _roles.FirstAsync(r => r.Id == roleId);
+            var roleToArray = new[] { roleId };
+            return DeleteRolesRangeAsync(roleToArray);
+        }
 
-            _roles.Remove(existedRole);
+        public async Task DeleteRolesRangeAsync(IEnumerable<int> roleIds)
+        {
+            var existedRoles = await _roles.Where(r => roleIds.Contains(r.Id)).ToListAsync();
+
+            if (existedRoles.Count != roleIds.Count())
+            {
+                throw new Exception("чего-то не хватает");
+            }
+
+            _roles.RemoveRange(existedRoles);
             await _dbContext.SaveChangesAsync();
         }
 
@@ -133,7 +148,11 @@ namespace CustomIdentity.BLL.Services.Implementation
                 throw new ArgumentNullException(nameof(model.RoleIds));
             }
 
-            var userEntity = await _userManager.FindByIdAsync(model.UserId.ToString());//TODO чекнуть на ошибку
+            var userEntity = await _userManager.FindByIdAsync(model.UserId.ToString());
+            if (userEntity == null)
+            {
+                throw new ArgumentNullException("EntityNotFoundException");
+            }
 
             var existedRolesCount = _roles.Count(x => rolesIdList.Contains(x.Id));
             if (rolesIdList.Count != existedRolesCount)
@@ -156,6 +175,8 @@ namespace CustomIdentity.BLL.Services.Implementation
 
             var userRolesToCreate = rolesIdsToUserRoles.Except(existedUserRoles, userRoleEqualityComparer);
             await _userRoles.AddRangeAsync(userRolesToCreate);
+
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

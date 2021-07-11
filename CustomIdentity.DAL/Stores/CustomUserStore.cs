@@ -24,7 +24,7 @@ namespace CustomIdentity.DAL.Stores
         private readonly DbSet<User> _users;
         private readonly DbSet<UserLogin> _userLogins;
         private readonly DbSet<UserClaimAssociative> _userClaimAssociatives;
-        private readonly DbSet<UserClaim> _userClaim;
+        private readonly DbSet<UserClaim> _userClaims;
         private bool _disposed;
 
         public CustomUserStore(CustomIdentityDbContext dbContext)
@@ -34,7 +34,7 @@ namespace CustomIdentity.DAL.Stores
             _users = _dbContext.Users;
             _userLogins = _dbContext.UserLogins;
             _userClaimAssociatives = _dbContext.UserClaimAssociatives;
-            _userClaim = _dbContext.UserClaims;
+            _userClaims = _dbContext.UserClaims;
         }
 
         public Task<string> GetUserIdAsync(User user, CancellationToken cancellationToken)
@@ -329,36 +329,34 @@ namespace CustomIdentity.DAL.Stores
             return userClaims;
         }
 
-        public Task AddClaimsAsync(User user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
+        public async Task AddClaimsAsync(User user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
             if (user == null)
             {
                 throw new ArgumentNullException(nameof(user));
             }
-            if (claims == null)
+
+            var claimsList = claims?.ToList();
+            if (claimsList == null || !claimsList.Any())
             {
                 throw new ArgumentNullException(nameof(claims));
             }
 
-            foreach (var claim in claims)
+            var existedNewClaimIds = await _userClaims.Where(uc => claimsList.Any(c => c.Type == uc.ClaimType && c.Value == uc.ClaimValue))
+                .ToListAsync(cancellationToken);
+            if (existedNewClaimIds.Count != claimsList.Count)
             {
-                var newUserClaim = new UserClaim
-                {
-                    ClaimType = claim.Type,
-                    ClaimValue = claim.Value
-                };
-                _userClaim.Add(newUserClaim);
-
-                var newUserClaimAssociative = new UserClaimAssociative
-                {
-                    User = user,
-                    UserClaim = newUserClaim
-                };
-                _userClaimAssociatives.Add(newUserClaimAssociative);
+                throw new Exception("Таких клаймов нету");
             }
 
-            return Task.FromResult(false);
+            var userClaimAssociativesToCreate = existedNewClaimIds.Select(uc => new UserClaimAssociative
+            {
+                UserId = user.Id,
+                UserClaimId = uc.Id
+            });
+
+            await _userClaimAssociatives.AddRangeAsync(userClaimAssociativesToCreate);
         }
 
         public async Task ReplaceClaimAsync(User user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
