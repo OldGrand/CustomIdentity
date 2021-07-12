@@ -29,9 +29,6 @@ namespace CustomIdentity.DAL
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<UserClaim>()
-                .HasKey(uc => new { uc.ClaimEntityId, uc.UserId });
-            
             var storeOptions = GetStoreOptions();
             var maxKeyLength = storeOptions?.MaxLengthForKeys ?? 0;
             var encryptPersonalData = storeOptions?.ProtectPersonalData ?? false;
@@ -78,20 +75,12 @@ namespace CustomIdentity.DAL
 
             modelBuilder.Entity<UserRole>(b =>
             {
-                b.HasKey(ur => new
-                {
-                    ur.RoleId,
-                    ur.UserId
-                });
+                b.HasKey(ur => new { ur.RoleId, ur.UserId });
             });
 
             modelBuilder.Entity<RoleClaim>(b =>
             {
-                b.HasKey(ur => new
-                {
-                    ur.RoleId,
-                    ur.UserClaimId
-                });
+                b.HasKey(ur => new { ur.RoleId, ur.UserClaimId });
             });
 
             modelBuilder.Entity<Role>(b =>
@@ -112,6 +101,11 @@ namespace CustomIdentity.DAL
             modelBuilder.Entity<ClaimEntity>(b =>
             {
                 b.HasIndex(r => new { r.ClaimTypeId, r.ClaimValueId }).IsUnique();
+            });
+
+            modelBuilder.Entity<UserClaim>(b =>
+            {
+                b.HasKey(uc => new { uc.ClaimEntityId, uc.UserId });
             });
         }
 

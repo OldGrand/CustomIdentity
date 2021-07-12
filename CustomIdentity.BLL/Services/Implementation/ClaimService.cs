@@ -194,11 +194,13 @@ namespace CustomIdentity.BLL.Services.Implementation
             return taskRoleEntity;
         }
 
-        public async Task<IEnumerable<Claim>> GetClaimsForUserAsync(Guid userId)
+        public IAsyncEnumerable<UserClaim> GetClaimsForUserAsync(Guid userId)
         {
-            var userEntity = await _userManager.FindByIdAsync(userId.ToString());
-
-            var userClaims = await _userManager.GetClaimsAsync(userEntity);
+            var userClaims = _userClaims.Where(uc => uc.UserId == userId)
+                .Include(uc => uc.ClaimEntity).ThenInclude(c => c.ClaimType)
+                .Include(uc => uc.ClaimEntity).ThenInclude(c => c.ClaimValue)
+                .AsAsyncEnumerable();
+            
             return userClaims;
         }
     }
