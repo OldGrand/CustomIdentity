@@ -339,27 +339,24 @@ namespace CustomIdentity.DAL.Stores
             ThrowIfDisposed();
 
             var claimsList = claims.ToList();
+            //var claimTypes = claimsList.Select(c => c.Type).ToList();
+            //var claimValues = claimsList.Select(c => c.Value).ToList();
 
-            var claimTypes = claimsList.Select(c => c.Type).ToList();
-            var claimValues = claimsList.Select(c => c.Value).ToList();
+            //var claimEntities = await _claimEntities
+            //    .Include(uc => uc.ClaimType)
+            //    .Include(uc => uc.ClaimValue)
+            //    .Where(ce => claimTypes.Contains(ce.ClaimType.Value) && claimValues.Contains(ce.ClaimValue.Value))
+            //    .ToListAsync(cancellationToken);
 
-            var claimTypeEntities = await _claimTypes.Where(ct => claimTypes.Contains(ct.Value))
-                .ToListAsync(cancellationToken);
-            var claimValueEntities = await _claimValues.Where(ct => claimValues.Contains(ct.Value))
-                .ToListAsync(cancellationToken);
-
-            if (claimTypes.Count != claimTypeEntities.Count || claimValues.Count != claimValueEntities.Count)
-            {
-                throw new Exception();
-            }
-
-            //var claimsToUser = claimsList.Select(userClaim => new UserClaim
+            //if (claimsList.Count != claimEntities.Count)
             //{
-            //    User = user,
-            //    ClaimEntity = userClaim
-            //});
+            //    throw new Exception("Some claims not found");
+            //}
 
             //await _userClaims.AddRangeAsync(claimsToUser, cancellationToken);
+
+            var sheet = await _claimEntities.Where(ce => claimsList.Any(x => x.Type == ce.ClaimType.Value && x.Value == ce.ClaimValue.Value))
+                .ToListAsync(cancellationToken);
         }
 
         public async Task ReplaceClaimAsync(User user, Claim claim, Claim newClaim, CancellationToken cancellationToken)

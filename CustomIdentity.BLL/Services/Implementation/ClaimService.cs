@@ -141,16 +141,26 @@ namespace CustomIdentity.BLL.Services.Implementation
             {
                 throw new ArgumentNullException(nameof(model));
             }
-            
-            var claimTypeEntity = await _claimTypes.FirstAsync(ct => ct.Id == model.ClaimTypeId);
-            var claimValueEntity = await _claimValues.FirstAsync(ct => ct.Id == model.ClaimValueId);
-            
+
+            //var existedEntities = await _claimEntities.FirstOrDefaultAsync(ct =>
+            //    ct.ClaimTypeId == model.ClaimTypeId && ct.ClaimValueId == model.ClaimValueId);
+            //if (existedEntities != null)
+            //{
+            //    throw new Exception("EntityNotFoundException");
+            //}
+
+            //var newUserClaimModel = new ClaimEntity
+            //{
+            //    ClaimTypeId = existedEntities.ClaimTypeId,
+            //    ClaimValueId = existedEntities.ClaimValueId
+            //};
+
             var newUserClaimModel = new ClaimEntity
             {
-                ClaimType = claimTypeEntity,
-                ClaimValue = claimValueEntity
+                ClaimTypeId = model.ClaimTypeId,
+                ClaimValueId = model.ClaimValueId
             };
-            
+
             await _claimEntities.AddAsync(newUserClaimModel);
             await _dbContext.SaveChangesAsync();
         }
