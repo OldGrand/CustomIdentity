@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Claims;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using CustomIdentity.BLL.Models.Permissions;
 using CustomIdentity.DAL.Entities;
@@ -15,10 +13,8 @@ namespace CustomIdentity.BLL.Services.Interfaces
         IAsyncEnumerable<ClaimValue> GetAllClaimValuesAsync();
         Task CreateClaimValueAsync(string claimValue);
         Task DeleteClaimValueAsync(string claimValue);
-        Task AddOrUpdateUserClaimsAsync(UserClaimUpdateModel model);//TODO ToPermissionService
         Task CreateClaimAsync(ClaimCreateModel model);
         IAsyncEnumerable<ClaimEntity> GetAllClaimsAsync();
         Task DeleteClaimAsync(int claimId);
-        IAsyncEnumerable<UserClaim> GetClaimsForUserAsync(Guid userId);
     }
 }
