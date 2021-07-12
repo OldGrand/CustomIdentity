@@ -61,18 +61,18 @@ namespace CustomIdentity.Controllers
             return Ok();
         }
 
+        [HttpGet]
+        public IActionResult GetAllClaims()
+        {
+            return Ok(_claimService.GetAllClaimsAsync());
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateClaim(ClaimCreateModel model)
         {
             await _claimService.CreateClaimAsync(model);
 
             return Ok();
-        }
-
-        [HttpGet]
-        public IActionResult GetAllClaims()
-        {
-            return Ok(_claimService.GetAllClaimsAsync());
         }
 
         [HttpDelete]
