@@ -18,6 +18,7 @@ namespace CustomIdentity.BLL.Services.Implementation
         private readonly DbSet<ClaimEntity> _userClaims;
         private readonly DbSet<ClaimType> _claimTypes;
         private readonly DbSet<ClaimValue> _claimValues;
+        private readonly DbSet<ClaimEntity> _claimEntities;
         private readonly UserManager<User> _userManager;
 
         public ClaimService(CustomIdentityDbContext dbContext,
@@ -28,27 +29,77 @@ namespace CustomIdentity.BLL.Services.Implementation
             _userClaims = _dbContext.ClaimEntities;
             _claimTypes = _dbContext.ClaimTypes;
             _claimValues = _dbContext.ClaimValues;
+            _claimEntities = _dbContext.ClaimEntities;
         }
 
-        public async Task CreateClaimType(string claimTypeValue)
+        public IAsyncEnumerable<ClaimType> GetAllClaimTypesAsync()
         {
-            if (string.IsNullOrEmpty(claimTypeValue))
-            {
-                throw new ArgumentNullException(nameof(claimTypeValue));
-            }
+            var allClaimTypes = _claimTypes.AsAsyncEnumerable();
+            return allClaimTypes;
+        }
 
-            var isClaimTypeAlreadyExist = await _claimTypes.AnyAsync(ct => ct.Value == claimTypeValue);
-            if (isClaimTypeAlreadyExist)
+        public async Task CreateClaimTypeAsync(string claimType)
+        {
+            if (string.IsNullOrEmpty(claimType))
             {
-                throw new Exception("Value already exist");
+                throw new ArgumentNullException(nameof(claimType));
             }
-
+            
             var newClaimTypeEntity = new ClaimType
             {
-                Value = claimTypeValue
+                Value = claimType
             };
 
             await _claimTypes.AddAsync(newClaimTypeEntity);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task DeleteClaimTypeAsync(string claimType)
+        {
+            if (string.IsNullOrEmpty(claimType))
+            {
+                throw new ArgumentNullException(nameof(claimType));
+            }
+
+            var claimTypeEntity = await _claimTypes.FirstAsync(ct => ct.Value == claimType);
+
+            _claimTypes.Remove(claimTypeEntity);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public IAsyncEnumerable<ClaimValue> GetAllClaimValuesAsync()
+        {
+            var allClaimValues = _claimValues.AsAsyncEnumerable();
+            return allClaimValues;
+        }
+
+        public async Task CreateClaimValueAsync(string claimValue)
+        {
+            if (string.IsNullOrEmpty(claimValue))
+            {
+                throw new ArgumentNullException(nameof(claimValue));
+            }
+
+            var newClaimValueEntity = new ClaimValue
+            {
+                Value = claimValue
+            };
+
+            await _claimValues.AddAsync(newClaimValueEntity);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task DeleteClaimValueAsync(string claimValue)
+        {
+            if (string.IsNullOrEmpty(claimValue))
+            {
+                throw new ArgumentNullException(nameof(claimValue));
+            }
+
+            var claimValueEntity = await _claimValues.FirstAsync(ct => ct.Value == claimValue);
+
+            _claimValues.Remove(claimValueEntity);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task AddOrUpdateUserClaimsAsync(UserClaimUpdateModel model)
@@ -99,8 +150,8 @@ namespace CustomIdentity.BLL.Services.Implementation
                 ClaimType = claimTypeEntity,
                 ClaimValue = claimValueEntity
             };
-
-            await _userClaims.AddAsync(newUserClaimModel);
+            
+            await _claimEntities.AddAsync(newUserClaimModel);
             await _dbContext.SaveChangesAsync();
         }
 

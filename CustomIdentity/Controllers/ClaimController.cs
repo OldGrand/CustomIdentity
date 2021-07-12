@@ -17,10 +17,46 @@ namespace CustomIdentity.Controllers
             _claimService = claimService;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateClaimType(string claimTypeValue)
+        [HttpGet]
+        public IActionResult GetAllClaimTypes()
         {
-            await _claimService.CreateClaimType(claimTypeValue);
+            return Ok(_claimService.GetAllClaimTypesAsync());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateClaimType(string claimType)
+        {
+            await _claimService.CreateClaimTypeAsync(claimType);
+
+            return Ok();
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteClaimType(string claimType)
+        {
+            await _claimService.DeleteClaimTypeAsync(claimType);
+
+            return Ok();
+        }
+
+        [HttpGet]
+        public IActionResult GetAllClaimValues()
+        {
+            return Ok(_claimService.GetAllClaimValuesAsync());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateClaimValue(string claimValue)
+        {
+            await _claimService.CreateClaimValueAsync(claimValue);
+
+            return Ok();
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteClaimValue(string claimValue)
+        {
+            await _claimService.DeleteClaimValueAsync(claimValue);
 
             return Ok();
         }

@@ -107,6 +107,12 @@ namespace CustomIdentity.DAL
             modelBuilder.Entity<ClaimValue>(b =>
             {
                 b.HasIndex(r => r.Value).IsUnique();
+            });            
+            
+            modelBuilder.Entity<ClaimEntity>(b =>
+            {
+                b.HasIndex(r => r.ClaimTypeId).IsUnique();
+                b.HasIndex(r => r.ClaimValueId).IsUnique();
             });
         }
 
