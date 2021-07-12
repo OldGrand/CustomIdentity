@@ -70,7 +70,7 @@ namespace CustomIdentity.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetClaimsForUser(Guid userId)
+        public IActionResult GetClaimsForUser(Guid userId)
         {
             return Ok(_claimService.GetClaimsForUserAsync(userId));
         }
