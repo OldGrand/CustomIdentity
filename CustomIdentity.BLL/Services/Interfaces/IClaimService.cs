@@ -9,9 +9,9 @@ namespace CustomIdentity.BLL.Services.Interfaces
 {
     public interface IClaimService
     {
-        Task AddOrUpdateUserClaimsAsync(UserClaimAssociativesUpdateModel model);
-        Task CreateClaimAsync(UserClaimCreateModel model);
-        IAsyncEnumerable<UserClaim> GetAllClaimsAsync();
+        Task AddOrUpdateUserClaimsAsync(UserClaimUpdateModel model);
+        Task CreateClaimAsync(ClaimCreateModel model);
+        IAsyncEnumerable<ClaimEntity> GetAllClaimsAsync();
         Task DeleteClaimAsync(int claimId);
         Task<IEnumerable<Claim>> GetClaimsForUserAsync(Guid userId);
     }

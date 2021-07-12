@@ -14,11 +14,13 @@ namespace CustomIdentity.DAL
     {
         public DbSet<User> Users { get; set; }
         public DbSet<UserLogin> UserLogins { get; set; }
-        public DbSet<UserClaimAssociative> UserClaimAssociatives { get; set; }
         public DbSet<UserClaim> UserClaims { get; set; }
+        public DbSet<ClaimEntity> ClaimEntities { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<RoleClaim> RoleClaims { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<ClaimType> ClaimTypes { get; set; }
+        public DbSet<ClaimValue> ClaimValues { get; set; }
 
         public CustomIdentityDbContext(DbContextOptions options) : base(options)
         {
@@ -27,7 +29,7 @@ namespace CustomIdentity.DAL
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<UserClaimAssociative>()
+            modelBuilder.Entity<UserClaim>()
                 .HasKey(uc => new {uc.UserClaimId, uc.UserId});
             
             var storeOptions = GetStoreOptions();
@@ -95,6 +97,16 @@ namespace CustomIdentity.DAL
             modelBuilder.Entity<Role>(b =>
             {
                 b.HasIndex(r => r.Title).IsUnique();
+            });
+
+            modelBuilder.Entity<ClaimType>(b =>
+            {
+                b.HasIndex(r => r.Value).IsUnique();
+            });
+
+            modelBuilder.Entity<ClaimValue>(b =>
+            {
+                b.HasIndex(r => r.Value).IsUnique();
             });
         }
 

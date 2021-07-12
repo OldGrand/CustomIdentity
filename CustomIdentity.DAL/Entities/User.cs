@@ -34,6 +34,6 @@ namespace CustomIdentity.DAL.Entities
         public int AccessFailedCount { get; set; }
 
         public ICollection<UserRole> UserRoles { get; set; }
-        public ICollection<UserClaimAssociative> UserClaims { get; set; }
+        public ICollection<UserClaim> UserClaims { get; set; }
     }
 }

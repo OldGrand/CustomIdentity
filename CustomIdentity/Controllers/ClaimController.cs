@@ -18,7 +18,7 @@ namespace CustomIdentity.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateClaim(UserClaimCreateModel model)
+        public async Task<IActionResult> CreateClaim(ClaimCreateModel model)
         {
             await _claimService.CreateClaimAsync(model);
 
@@ -48,7 +48,7 @@ namespace CustomIdentity.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> ChangeUserClaims(UserClaimAssociativesUpdateModel model)
+        public async Task<IActionResult> ChangeUserClaims(UserClaimUpdateModel model)
         {
             await _claimService.AddOrUpdateUserClaimsAsync(model);
 

@@ -23,8 +23,8 @@ namespace CustomIdentity.DAL.Stores
         private readonly CustomIdentityDbContext _dbContext; //TODO Replace with uof and repos
         private readonly DbSet<User> _users;
         private readonly DbSet<UserLogin> _userLogins;
-        private readonly DbSet<UserClaimAssociative> _userClaimAssociatives;
         private readonly DbSet<UserClaim> _userClaims;
+        private readonly DbSet<ClaimEntity> _claimEntities;
         private bool _disposed;
 
         public CustomUserStore(CustomIdentityDbContext dbContext)
@@ -33,8 +33,8 @@ namespace CustomIdentity.DAL.Stores
             AutoSaveChanges = true;
             _users = _dbContext.Users;
             _userLogins = _dbContext.UserLogins;
-            _userClaimAssociatives = _dbContext.UserClaimAssociatives;
             _userClaims = _dbContext.UserClaims;
+            _claimEntities = _dbContext.ClaimEntities;
         }
 
         public Task<string> GetUserIdAsync(User user, CancellationToken cancellationToken)
@@ -321,9 +321,9 @@ namespace CustomIdentity.DAL.Stores
                 throw new ArgumentNullException(nameof(user));
             }
 
-            var userClaims = await _userClaimAssociatives.Where(uc => uc.UserId.Equals(user.Id))
-                .Include(uc => uc.UserClaim)
-                .Select(uc => new Claim(uc.UserClaim.ClaimType, uc.UserClaim.ClaimValue))
+            var userClaims = await _userClaims.Where(uc => uc.UserId.Equals(user.Id))
+                .Include(uc => uc.ClaimEntity)
+                .Select(uc => new Claim(uc.ClaimEntity.ClaimType, uc.ClaimEntity.ClaimValue))
                 .ToListAsync(cancellationToken);
 
             return userClaims;
@@ -332,16 +332,12 @@ namespace CustomIdentity.DAL.Stores
         public async Task AddClaimsAsync(User user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
-            if (user == null)
-            {
-                throw new ArgumentNullException(nameof(user));
-            }
 
             var claimsList = claims.ToList();
 
-            var existedUserClaims = await _userClaimAssociatives.Where(uc => uc.UserId == user.Id)
-                .Include(uc => uc.UserClaim)
-                .Select(uc => uc.UserClaim)
+            var existedUserClaims = await _userClaims.Where(uc => uc.UserId == user.Id)
+                .Include(uc => uc.ClaimEntity)
+                .Select(uc => uc.ClaimEntity)
                 .ToListAsync(cancellationToken);
 
             var existedUserClaimsCount = existedUserClaims.Count(uc => claimsList.Any(c => c.Type == uc.ClaimType && c.Value == uc.ClaimValue));
@@ -350,21 +346,16 @@ namespace CustomIdentity.DAL.Stores
                 throw new Exception(nameof(claims));
             }
 
-            var existedNewClaimIds = await _userClaims.Where(uc => claimsList.Any(c => c.Type == uc.ClaimType && c.Value == uc.ClaimValue))
-                .ToListAsync(cancellationToken);
-            if (existedNewClaimIds.Count != claimsList.Count)
-            {
-                throw new Exception("Таких клаймов нету");
-            }
+            //var existedNewClaimIds = await _claimEntities.Where(uc => claimsList.Contains(uc))
+            //    .ToListAsync(cancellationToken);
 
-            var claimsToUser = existedNewClaimIds.Select(userClaim => new UserClaimAssociative
-            {
-                User = user,
-                UserClaim = userClaim
-            });
+            //var claimsToUser = existedNewClaimIds.Select(userClaim => new UserClaim
+            //{
+            //    User = user,
+            //    ClaimEntity = userClaim
+            //});
 
-            await _userClaimAssociatives.AddRangeAsync(claimsToUser, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            //await _userClaims.AddRangeAsync(claimsToUser, cancellationToken);
         }
 
         public async Task ReplaceClaimAsync(User user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
@@ -383,15 +374,15 @@ namespace CustomIdentity.DAL.Stores
                 throw new ArgumentNullException(nameof(newClaim));
             }
 
-            var matchedClaimAssociatives = await _userClaimAssociatives.Include(uc => uc.UserClaim)
+            var matchedUserClaims = await _userClaims.Include(uc => uc.ClaimEntity)
                 .Where(uc => uc.UserId.Equals(user.Id) &&
-                             uc.UserClaim.ClaimValue == claim.Value &&
-                             uc.UserClaim.ClaimType == claim.Type)
+                             uc.ClaimEntity.ClaimValue == claim.Value &&
+                             uc.ClaimEntity.ClaimType == claim.Type)
                 .ToListAsync(cancellationToken);
 
-            foreach (var matchedClaimAssociative in matchedClaimAssociatives)
+            foreach (var matchedUserClaim in matchedUserClaims)
             {
-                var userClaim = matchedClaimAssociative.UserClaim;
+                var userClaim = matchedUserClaim.ClaimEntity;
 
                 userClaim.ClaimValue = newClaim.Value;
                 userClaim.ClaimType = newClaim.Type;
@@ -410,13 +401,13 @@ namespace CustomIdentity.DAL.Stores
                 throw new ArgumentNullException(nameof(claims));
             }
 
-            var allClaimsForUser = await _userClaimAssociatives.Where(uc => uc.UserId == user.Id)
-                .Include(uc => uc.UserClaim)
+            var allClaimsForUser = await _userClaims.Where(uc => uc.UserId == user.Id)
+                .Include(uc => uc.ClaimEntity)
                 .ToListAsync(cancellationToken);
 
             foreach (var claim in claims)
             {
-                var matchedClaims = allClaimsForUser.Where(uc => uc.UserClaim.ClaimValue == claim.Value && uc.UserClaim.ClaimType == claim.Type);
+                var matchedClaims = allClaimsForUser.Where(uc => uc.ClaimEntity.ClaimValue == claim.Value && uc.ClaimEntity.ClaimType == claim.Type);
                 foreach (var matchedClaim in matchedClaims)
                 {
                     allClaimsForUser.Remove(matchedClaim);
@@ -433,9 +424,9 @@ namespace CustomIdentity.DAL.Stores
                 throw new ArgumentNullException(nameof(claim));
             }
 
-            var usersForClaim = _userClaimAssociatives.Include(uc => uc.UserClaim)
+            var usersForClaim = _userClaims.Include(uc => uc.ClaimEntity)
                 .Include(uc => uc.User)
-                .Where(uc => uc.UserClaim.ClaimType == claim.Type && uc.UserClaim.ClaimValue == claim.Value)
+                .Where(uc => uc.ClaimEntity.ClaimType == claim.Type && uc.ClaimEntity.ClaimValue == claim.Value)
                 .Select(uc => uc.User);
             
             return await usersForClaim.ToListAsync(cancellationToken);

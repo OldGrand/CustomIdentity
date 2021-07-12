@@ -1,9 +1,13 @@
-﻿namespace CustomIdentity.DAL.Entities
+﻿using System;
+
+namespace CustomIdentity.DAL.Entities
 {
     public class UserClaim
     {
-        public int Id { get; set; }
-        public string ClaimType { get; set; } //TODO Replace with enum
-        public string ClaimValue { get; set; } //TODO Replace with enum
+        public Guid UserId { get; set; }
+        public User User { get; set; }
+
+        public int UserClaimId { get; set; }
+        public ClaimEntity ClaimEntity { get; set; }
     }
 }

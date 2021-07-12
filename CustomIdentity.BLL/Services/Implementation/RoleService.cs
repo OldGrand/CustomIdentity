@@ -21,7 +21,7 @@ namespace CustomIdentity.BLL.Services.Implementation
         private readonly DbSet<Role> _roles;
         private readonly DbSet<UserRole> _userRoles;
         private readonly DbSet<RoleClaim> _roleClaims;
-        private readonly DbSet<UserClaim> _userClaims;
+        private readonly DbSet<ClaimEntity> _userClaims;
 
         public RoleService(CustomIdentityDbContext dbContext,
             UserManager<User> userManager)
@@ -31,7 +31,7 @@ namespace CustomIdentity.BLL.Services.Implementation
             _roles = _dbContext.Roles;
             _userRoles = _dbContext.UserRoles;
             _roleClaims = _dbContext.RoleClaims;
-            _userClaims = _dbContext.UserClaims;
+            _userClaims = _dbContext.ClaimEntities;
         }
 
         public async Task AddOrUpdateClaimsToRoleAsync(RoleClaimsUpdateModel model)

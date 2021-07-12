@@ -15,7 +15,9 @@ namespace CustomIdentity.BLL.Services.Implementation
     public class ClaimService : IClaimService
     {
         private readonly CustomIdentityDbContext _dbContext;//TODO Replace with repos and uow
-        private readonly DbSet<UserClaim> _userClaims;
+        private readonly DbSet<ClaimEntity> _userClaims;
+        private readonly DbSet<ClaimType> _claimTypes;
+        private readonly DbSet<ClaimValue> _claimValues;
         private readonly UserManager<User> _userManager;
 
         public ClaimService(CustomIdentityDbContext dbContext,
@@ -23,10 +25,12 @@ namespace CustomIdentity.BLL.Services.Implementation
         {
             _dbContext = dbContext;
             _userManager = userManager;
-            _userClaims = _dbContext.UserClaims;
+            _userClaims = _dbContext.ClaimEntities;
+            _claimTypes = _dbContext.ClaimTypes;
+            _claimValues = _dbContext.ClaimValues;
         }
 
-        public async Task AddOrUpdateUserClaimsAsync(UserClaimAssociativesUpdateModel model)
+        public async Task AddOrUpdateUserClaimsAsync(UserClaimUpdateModel model)
         {
             if (model == null)
             {
@@ -45,30 +49,34 @@ namespace CustomIdentity.BLL.Services.Implementation
                 throw new Exception("EntityNotFoundException");
             }
 
-            var claimIdListToClaims = model.ClaimIds.Select(uc => new Claim(uc.ClaimType, uc.ClaimValue));
+            var existedNewClaimIds = await _userClaims.Where(uc => claimsIdList.Contains(uc.Id))
+                .Include(uc => uc.ClaimType)
+                .Include(uc => uc.ClaimValue)
+                .Select(uc => new Claim(uc.ClaimType.Value, uc.ClaimValue.Value))
+                .ToListAsync();
 
-            await _userManager.AddClaimsAsync(userEntity, claimIdListToClaims);
+            if (existedNewClaimIds.Count != claimsIdList.Count)
+            {
+                throw new Exception("Таких клаймов нету");
+            }
+
+            await _userManager.AddClaimsAsync(userEntity, existedNewClaimIds);
         }
 
-        public async Task CreateClaimAsync(UserClaimCreateModel model)
+        public async Task CreateClaimAsync(ClaimCreateModel model)
         {
-            if (model == null || string.IsNullOrEmpty(model.ClaimValue) || string.IsNullOrEmpty(model.ClaimType))
+            if (model == null)
             {
                 throw new ArgumentNullException(nameof(model));
             }
-
-            var isThereSimilarClaim = await _userClaims.AnyAsync(uc => uc.ClaimType == model.ClaimType &&
-                                                                 uc.ClaimValue == model.ClaimValue);
-
-            if (isThereSimilarClaim)
+            
+            var claimTypeEntity = await _claimTypes.FirstAsync(ct => ct.Id == model.ClaimTypeId);
+            var claimValueEntity = await _claimValues.FirstAsync(ct => ct.Id == model.ClaimValueId);
+            
+            var newUserClaimModel = new ClaimEntity
             {
-                throw new Exception(nameof(model));
-            }
-
-            var newUserClaimModel = new UserClaim
-            {
-                ClaimType = model.ClaimType,
-                ClaimValue = model.ClaimValue
+                ClaimType = claimTypeEntity,
+                ClaimValue = claimValueEntity
             };
 
             await _userClaims.AddAsync(newUserClaimModel);
@@ -95,13 +103,13 @@ namespace CustomIdentity.BLL.Services.Implementation
             await _dbContext.SaveChangesAsync();
         }
 
-        public IAsyncEnumerable<UserClaim> GetAllClaimsAsync()
+        public IAsyncEnumerable<ClaimEntity> GetAllClaimsAsync()
         {
             var userClaimEntities = _userClaims.AsAsyncEnumerable();
             return userClaimEntities;
         }
 
-        public Task<UserClaim> GetClaimAsync(int claimId)
+        public Task<ClaimEntity> GetClaimAsync(int claimId)
         {
             var taskRoleEntity = _userClaims.FirstAsync(r => r.Id == claimId);
             return taskRoleEntity;
