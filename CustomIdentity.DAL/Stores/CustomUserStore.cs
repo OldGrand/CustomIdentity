@@ -342,26 +342,29 @@ namespace CustomIdentity.DAL.Stores
             var existedUserClaims = await _userClaimAssociatives.Where(uc => uc.UserId == user.Id)
                 .Include(uc => uc.UserClaim)
                 .Select(uc => uc.UserClaim)
-                .CountAsync(uc => claimsList.Any(c => c.Type == uc.ClaimType && c.Value == uc.ClaimValue), cancellationToken);
+                .ToListAsync(cancellationToken);
 
-            if (existedUserClaims != 0)
+            var existedUserClaimsCount = existedUserClaims.Count(uc => claimsList.Any(c => c.Type == uc.ClaimType && c.Value == uc.ClaimValue));
+            if (existedUserClaimsCount != 0)
             {
                 throw new Exception(nameof(claims));
             }
 
-            var claimsToCreate = claimsList.Select(c => new UserClaim
+            var existedNewClaimIds = await _userClaims.Where(uc => claimsList.Any(c => c.Type == uc.ClaimType && c.Value == uc.ClaimValue))
+                .ToListAsync(cancellationToken);
+            if (existedNewClaimIds.Count != claimsList.Count)
             {
-                ClaimType = c.Type,
-                ClaimValue = c.Value
-            });
+                throw new Exception("Таких клаймов нету");
+            }
 
-            var claimsToUser = claimsToCreate.Select(userClaim => new UserClaimAssociative
+            var claimsToUser = existedNewClaimIds.Select(userClaim => new UserClaimAssociative
             {
                 User = user,
                 UserClaim = userClaim
             });
 
             await _userClaimAssociatives.AddRangeAsync(claimsToUser, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
         public async Task ReplaceClaimAsync(User user, Claim claim, Claim newClaim, CancellationToken cancellationToken)

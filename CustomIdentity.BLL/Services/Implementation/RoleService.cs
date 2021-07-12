@@ -89,7 +89,7 @@ namespace CustomIdentity.BLL.Services.Implementation
             var newRoleEntity = new Role
             {
                 Title = roleName
-            };
+            };//TODO роль может продублироваться
 
             await _roles.AddAsync(newRoleEntity);
             await _dbContext.SaveChangesAsync();

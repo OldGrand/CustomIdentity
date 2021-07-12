@@ -45,14 +45,7 @@ namespace CustomIdentity.BLL.Services.Implementation
                 throw new Exception("EntityNotFoundException");
             }
 
-            var existedNewClaimIds = await _userClaims.Where(uc => claimsIdList.Any(c => c == uc.Id))
-                .ToListAsync();
-            if (existedNewClaimIds.Count != claimsIdList.Count)
-            {
-                throw new Exception("Таких клаймов нету");
-            }
-
-            var claimIdListToClaims = existedNewClaimIds.Select(uc => new Claim(uc.ClaimType, uc.ClaimValue));
+            var claimIdListToClaims = model.ClaimIds.Select(uc => new Claim(uc.ClaimType, uc.ClaimValue));
 
             await _userManager.AddClaimsAsync(userEntity, claimIdListToClaims);
         }
@@ -62,6 +55,14 @@ namespace CustomIdentity.BLL.Services.Implementation
             if (model == null || string.IsNullOrEmpty(model.ClaimValue) || string.IsNullOrEmpty(model.ClaimType))
             {
                 throw new ArgumentNullException(nameof(model));
+            }
+
+            var isThereSimilarClaim = await _userClaims.AnyAsync(uc => uc.ClaimType == model.ClaimType &&
+                                                                 uc.ClaimValue == model.ClaimValue);
+
+            if (isThereSimilarClaim)
+            {
+                throw new Exception(nameof(model));
             }
 
             var newUserClaimModel = new UserClaim

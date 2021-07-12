@@ -1,5 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using CustomIdentity.BLL.Models.Permissions;
+using CustomIdentity.DAL.Entities;
 
 namespace CustomIdentity.BLL.Services.Interfaces
 {
@@ -7,5 +11,8 @@ namespace CustomIdentity.BLL.Services.Interfaces
     {
         Task AddOrUpdateUserClaimsAsync(UserClaimAssociativesUpdateModel model);
         Task CreateClaimAsync(UserClaimCreateModel model);
+        IAsyncEnumerable<UserClaim> GetAllClaimsAsync();
+        Task DeleteClaimAsync(int claimId);
+        Task<IEnumerable<Claim>> GetClaimsForUserAsync(Guid userId);
     }
 }
