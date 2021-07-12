@@ -24,6 +24,8 @@ namespace CustomIdentity.DAL.Stores
         private readonly DbSet<User> _users;
         private readonly DbSet<UserLogin> _userLogins;
         private readonly DbSet<UserClaim> _userClaims;
+        private readonly DbSet<ClaimType> _claimTypes;
+        private readonly DbSet<ClaimValue> _claimValues;
         private readonly DbSet<ClaimEntity> _claimEntities;
         private bool _disposed;
 
@@ -34,6 +36,8 @@ namespace CustomIdentity.DAL.Stores
             _users = _dbContext.Users;
             _userLogins = _dbContext.UserLogins;
             _userClaims = _dbContext.UserClaims;
+            _claimTypes = _dbContext.ClaimTypes;
+            _claimValues = _dbContext.ClaimValues;
             _claimEntities = _dbContext.ClaimEntities;
         }
 
@@ -322,8 +326,9 @@ namespace CustomIdentity.DAL.Stores
             }
 
             var userClaims = await _userClaims.Where(uc => uc.UserId.Equals(user.Id))
-                .Include(uc => uc.ClaimEntity)
-                .Select(uc => new Claim(uc.ClaimEntity.ClaimType, uc.ClaimEntity.ClaimValue))
+                .Include(uc => uc.ClaimEntity).ThenInclude(uc => uc.ClaimType)
+                .Include(uc => uc.ClaimEntity).ThenInclude(uc => uc.ClaimValue)
+                .Select(uc => new Claim(uc.ClaimEntity.ClaimType.Value, uc.ClaimEntity.ClaimValue.Value))
                 .ToListAsync(cancellationToken);
 
             return userClaims;
@@ -335,21 +340,20 @@ namespace CustomIdentity.DAL.Stores
 
             var claimsList = claims.ToList();
 
-            var existedUserClaims = await _userClaims.Where(uc => uc.UserId == user.Id)
-                .Include(uc => uc.ClaimEntity)
-                .Select(uc => uc.ClaimEntity)
+            var claimTypes = claimsList.Select(c => c.Type).ToList();
+            var claimValues = claimsList.Select(c => c.Value).ToList();
+
+            var claimTypeEntities = await _claimTypes.Where(ct => claimTypes.Contains(ct.Value))
+                .ToListAsync(cancellationToken);
+            var claimValueEntities = await _claimValues.Where(ct => claimValues.Contains(ct.Value))
                 .ToListAsync(cancellationToken);
 
-            var existedUserClaimsCount = existedUserClaims.Count(uc => claimsList.Any(c => c.Type == uc.ClaimType && c.Value == uc.ClaimValue));
-            if (existedUserClaimsCount != 0)
+            if (claimTypes.Count != claimTypeEntities.Count || claimValues.Count != claimValueEntities.Count)
             {
-                throw new Exception(nameof(claims));
+                throw new Exception();
             }
 
-            //var existedNewClaimIds = await _claimEntities.Where(uc => claimsList.Contains(uc))
-            //    .ToListAsync(cancellationToken);
-
-            //var claimsToUser = existedNewClaimIds.Select(userClaim => new UserClaim
+            //var claimsToUser = claimsList.Select(userClaim => new UserClaim
             //{
             //    User = user,
             //    ClaimEntity = userClaim
@@ -374,19 +378,19 @@ namespace CustomIdentity.DAL.Stores
                 throw new ArgumentNullException(nameof(newClaim));
             }
 
-            var matchedUserClaims = await _userClaims.Include(uc => uc.ClaimEntity)
-                .Where(uc => uc.UserId.Equals(user.Id) &&
-                             uc.ClaimEntity.ClaimValue == claim.Value &&
-                             uc.ClaimEntity.ClaimType == claim.Type)
-                .ToListAsync(cancellationToken);
+            //var matchedUserClaims = await _userClaims.Include(uc => uc.ClaimEntity)
+            //    .Where(uc => uc.UserId.Equals(user.Id) &&
+            //                 uc.ClaimEntity.ClaimValue == claim.Value &&
+            //                 uc.ClaimEntity.ClaimType == claim.Type)
+            //    .ToListAsync(cancellationToken);
 
-            foreach (var matchedUserClaim in matchedUserClaims)
-            {
-                var userClaim = matchedUserClaim.ClaimEntity;
+            //foreach (var matchedUserClaim in matchedUserClaims)
+            //{
+            //    var userClaim = matchedUserClaim.ClaimEntity;
 
-                userClaim.ClaimValue = newClaim.Value;
-                userClaim.ClaimType = newClaim.Type;
-            }
+            //    userClaim.ClaimValue = newClaim.Value;
+            //    userClaim.ClaimType = newClaim.Type;
+            //}
         }
 
         public async Task RemoveClaimsAsync(User user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
@@ -401,18 +405,18 @@ namespace CustomIdentity.DAL.Stores
                 throw new ArgumentNullException(nameof(claims));
             }
 
-            var allClaimsForUser = await _userClaims.Where(uc => uc.UserId == user.Id)
-                .Include(uc => uc.ClaimEntity)
-                .ToListAsync(cancellationToken);
+            //var allClaimsForUser = await _userClaims.Where(uc => uc.UserId == user.Id)
+            //    .Include(uc => uc.ClaimEntity)
+            //    .ToListAsync(cancellationToken);
 
-            foreach (var claim in claims)
-            {
-                var matchedClaims = allClaimsForUser.Where(uc => uc.ClaimEntity.ClaimValue == claim.Value && uc.ClaimEntity.ClaimType == claim.Type);
-                foreach (var matchedClaim in matchedClaims)
-                {
-                    allClaimsForUser.Remove(matchedClaim);
-                }
-            }
+            //foreach (var claim in claims)
+            //{
+            //    var matchedClaims = allClaimsForUser.Where(uc => uc.ClaimEntity.ClaimValue == claim.Value && uc.ClaimEntity.ClaimType == claim.Type);
+            //    foreach (var matchedClaim in matchedClaims)
+            //    {
+            //        allClaimsForUser.Remove(matchedClaim);
+            //    }
+            //}
         }
 
         public async Task<IList<User>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
@@ -426,9 +430,11 @@ namespace CustomIdentity.DAL.Stores
 
             var usersForClaim = _userClaims.Include(uc => uc.ClaimEntity)
                 .Include(uc => uc.User)
-                .Where(uc => uc.ClaimEntity.ClaimType == claim.Type && uc.ClaimEntity.ClaimValue == claim.Value)
+                .Include(uc => uc.ClaimEntity).ThenInclude(c => c.ClaimType)
+                .Include(uc => uc.ClaimEntity).ThenInclude(c => c.ClaimValue)
+                .Where(uc => uc.ClaimEntity.ClaimType.Value == claim.Type && uc.ClaimEntity.ClaimValue.Value == claim.Value)
                 .Select(uc => uc.User);
-            
+
             return await usersForClaim.ToListAsync(cancellationToken);
         }
 

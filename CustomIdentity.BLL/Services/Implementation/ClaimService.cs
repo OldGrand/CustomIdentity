@@ -30,6 +30,27 @@ namespace CustomIdentity.BLL.Services.Implementation
             _claimValues = _dbContext.ClaimValues;
         }
 
+        public async Task CreateClaimType(string claimTypeValue)
+        {
+            if (string.IsNullOrEmpty(claimTypeValue))
+            {
+                throw new ArgumentNullException(nameof(claimTypeValue));
+            }
+
+            var isClaimTypeAlreadyExist = await _claimTypes.AnyAsync(ct => ct.Value == claimTypeValue);
+            if (isClaimTypeAlreadyExist)
+            {
+                throw new Exception("Value already exist");
+            }
+
+            var newClaimTypeEntity = new ClaimType
+            {
+                Value = claimTypeValue
+            };
+
+            await _claimTypes.AddAsync(newClaimTypeEntity);
+        }
+
         public async Task AddOrUpdateUserClaimsAsync(UserClaimUpdateModel model)
         {
             if (model == null)

@@ -18,6 +18,14 @@ namespace CustomIdentity.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> CreateClaimType(string claimTypeValue)
+        {
+            await _claimService.CreateClaimType(claimTypeValue);
+
+            return Ok();
+        }
+
+        [HttpPost]
         public async Task<IActionResult> CreateClaim(ClaimCreateModel model)
         {
             await _claimService.CreateClaimAsync(model);
