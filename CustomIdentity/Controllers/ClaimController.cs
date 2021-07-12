@@ -70,12 +70,6 @@ namespace CustomIdentity.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetClaimsForUser(Guid userId)
-        {
-            return Ok(_claimService.GetClaimsForUserAsync(userId));
-        }
-
-        [HttpGet]
         public IActionResult GetAllClaims()
         {
             return Ok(_claimService.GetAllClaimsAsync());
@@ -85,14 +79,6 @@ namespace CustomIdentity.Controllers
         public async Task<IActionResult> DeleteClaim(int claimId)
         {
             await _claimService.DeleteClaimAsync(claimId);
-
-            return Ok();
-        }
-
-        [HttpPut]
-        public async Task<IActionResult> ChangeUserClaims(UserClaimUpdateModel model)
-        {
-            await _claimService.AddOrUpdateUserClaimsAsync(model);
 
             return Ok();
         }

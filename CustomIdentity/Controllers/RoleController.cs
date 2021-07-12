@@ -38,14 +38,6 @@ namespace CustomIdentity.Controllers
             return Ok();
         }
 
-        [HttpPut]
-        public async Task<IActionResult> ChangeUserRoles(UserRolesUpdateModel updateModel)
-        {
-            await _roleService.AddOrUpdateUserRolesAsync(updateModel);
-
-            return Ok();
-        }
-
         [HttpDelete]
         public async Task<IActionResult> DeleteRole(int roleId)
         {
