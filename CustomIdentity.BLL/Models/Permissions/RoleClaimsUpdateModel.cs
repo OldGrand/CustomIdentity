@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CustomIdentity.BLL.Models
+namespace CustomIdentity.BLL.Models.Permissions
 {
     public class RoleClaimsUpdateModel
     {

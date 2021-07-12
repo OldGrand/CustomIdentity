@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CustomIdentity.BLL.Extensions;
 using CustomIdentity.BLL.Infrastructure.Comparers;
 using CustomIdentity.BLL.Models;
+using CustomIdentity.BLL.Models.Permissions;
 using CustomIdentity.BLL.Services.Interfaces;
 using CustomIdentity.DAL;
 using CustomIdentity.DAL.Entities;
@@ -121,7 +122,7 @@ namespace CustomIdentity.BLL.Services.Implementation
 
         public Task<Role> GetRoleAsync(int roleId)
         {
-            var taskRoleEntity = _roles.FirstOrDefaultAsync(r => r.Id == roleId);
+            var taskRoleEntity = _roles.FirstAsync(r => r.Id == roleId);
             return taskRoleEntity;
         }
         

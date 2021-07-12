@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CustomIdentity.BLL.Models;
+using CustomIdentity.BLL.Models.Permissions;
 using CustomIdentity.DAL.Entities;
 
 namespace CustomIdentity.BLL.Services.Interfaces

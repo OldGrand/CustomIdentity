@@ -337,26 +337,31 @@ namespace CustomIdentity.DAL.Stores
                 throw new ArgumentNullException(nameof(user));
             }
 
-            var claimsList = claims?.ToList();
-            if (claimsList == null || !claimsList.Any())
+            var claimsList = claims.ToList();
+
+            var existedUserClaims = await _userClaimAssociatives.Where(uc => uc.UserId == user.Id)
+                .Include(uc => uc.UserClaim)
+                .Select(uc => uc.UserClaim)
+                .CountAsync(uc => claimsList.Any(c => c.Type == uc.ClaimType && c.Value == uc.ClaimValue), cancellationToken);
+
+            if (existedUserClaims != 0)
             {
-                throw new ArgumentNullException(nameof(claims));
+                throw new Exception(nameof(claims));
             }
 
-            var existedNewClaimIds = await _userClaims.Where(uc => claimsList.Any(c => c.Type == uc.ClaimType && c.Value == uc.ClaimValue))
-                .ToListAsync(cancellationToken);
-            if (existedNewClaimIds.Count != claimsList.Count)
+            var claimsToCreate = claimsList.Select(c => new UserClaim
             {
-                throw new Exception("Таких клаймов нету");
-            }
-
-            var userClaimAssociativesToCreate = existedNewClaimIds.Select(uc => new UserClaimAssociative
-            {
-                UserId = user.Id,
-                UserClaimId = uc.Id
+                ClaimType = c.Type,
+                ClaimValue = c.Value
             });
 
-            await _userClaimAssociatives.AddRangeAsync(userClaimAssociativesToCreate, cancellationToken);
+            var claimsToUser = claimsToCreate.Select(userClaim => new UserClaimAssociative
+            {
+                User = user,
+                UserClaim = userClaim
+            });
+
+            await _userClaimAssociatives.AddRangeAsync(claimsToUser, cancellationToken);
         }
 
         public async Task ReplaceClaimAsync(User user, Claim claim, Claim newClaim, CancellationToken cancellationToken)

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using AutoMapper;
 using CustomIdentity.BLL.Models;
+using CustomIdentity.BLL.Models.Permissions;
 using CustomIdentity.BLL.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
