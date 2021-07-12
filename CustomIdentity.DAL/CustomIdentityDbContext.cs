@@ -30,7 +30,7 @@ namespace CustomIdentity.DAL
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<UserClaim>()
-                .HasKey(uc => new {uc.UserClaimId, uc.UserId});
+                .HasKey(uc => new { uc.ClaimEntityId, uc.UserId });
             
             var storeOptions = GetStoreOptions();
             var maxKeyLength = storeOptions?.MaxLengthForKeys ?? 0;

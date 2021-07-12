@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CustomIdentity.BLL.Extensions;
 using CustomIdentity.BLL.Infrastructure.Comparers;
-using CustomIdentity.BLL.Models;
 using CustomIdentity.BLL.Models.Permissions;
 using CustomIdentity.BLL.Services.Interfaces;
 using CustomIdentity.DAL;

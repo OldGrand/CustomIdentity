@@ -6,13 +6,11 @@ using System.Threading.Tasks;
 using CustomIdentity.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace CustomIdentity.DAL.Stores
 {
     public class CustomUserStore : IUserPasswordStore<User>, 
         IUserLoginStore<User>,
-        IUserClaimStore<User>,
         IUserEmailStore<User>,
         IUserSecurityStampStore<User>,
         IProtectedUserStore<User>
@@ -23,10 +21,6 @@ namespace CustomIdentity.DAL.Stores
         private readonly CustomIdentityDbContext _dbContext; //TODO Replace with uof and repos
         private readonly DbSet<User> _users;
         private readonly DbSet<UserLogin> _userLogins;
-        private readonly DbSet<UserClaim> _userClaims;
-        private readonly DbSet<ClaimType> _claimTypes;
-        private readonly DbSet<ClaimValue> _claimValues;
-        private readonly DbSet<ClaimEntity> _claimEntities;
         private bool _disposed;
 
         public CustomUserStore(CustomIdentityDbContext dbContext)
@@ -35,10 +29,6 @@ namespace CustomIdentity.DAL.Stores
             AutoSaveChanges = true;
             _users = _dbContext.Users;
             _userLogins = _dbContext.UserLogins;
-            _userClaims = _dbContext.UserClaims;
-            _claimTypes = _dbContext.ClaimTypes;
-            _claimValues = _dbContext.ClaimValues;
-            _claimEntities = _dbContext.ClaimEntities;
         }
 
         public Task<string> GetUserIdAsync(User user, CancellationToken cancellationToken)
@@ -316,125 +306,7 @@ namespace CustomIdentity.DAL.Stores
 
             return null;
         }
-
-        public async Task<IList<Claim>> GetClaimsAsync(User user, CancellationToken cancellationToken)
-        {
-            ThrowIfDisposed();
-            if (user == null)
-            {
-                throw new ArgumentNullException(nameof(user));
-            }
-
-            var userClaims = await _userClaims.Where(uc => uc.UserId.Equals(user.Id))
-                .Include(uc => uc.ClaimEntity).ThenInclude(uc => uc.ClaimType)
-                .Include(uc => uc.ClaimEntity).ThenInclude(uc => uc.ClaimValue)
-                .Select(uc => new Claim(uc.ClaimEntity.ClaimType.Value, uc.ClaimEntity.ClaimValue.Value))
-                .ToListAsync(cancellationToken);
-
-            return userClaims;
-        }
-
-        public async Task AddClaimsAsync(User user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
-        {
-            ThrowIfDisposed();
-
-            var claimsList = claims.ToList();
-            //var claimTypes = claimsList.Select(c => c.Type).ToList();
-            //var claimValues = claimsList.Select(c => c.Value).ToList();
-
-            //var claimEntities = await _claimEntities
-            //    .Include(uc => uc.ClaimType)
-            //    .Include(uc => uc.ClaimValue)
-            //    .Where(ce => claimTypes.Contains(ce.ClaimType.Value) && claimValues.Contains(ce.ClaimValue.Value))
-            //    .ToListAsync(cancellationToken);
-
-            //if (claimsList.Count != claimEntities.Count)
-            //{
-            //    throw new Exception("Some claims not found");
-            //}
-
-            //await _userClaims.AddRangeAsync(claimsToUser, cancellationToken);
-
-            var sheet = await _claimEntities.Where(ce => claimsList.Any(x => x.Type == ce.ClaimType.Value && x.Value == ce.ClaimValue.Value))
-                .ToListAsync(cancellationToken);
-        }
-
-        public async Task ReplaceClaimAsync(User user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
-        {
-            ThrowIfDisposed();
-            if (user == null)
-            {
-                throw new ArgumentNullException(nameof(user));
-            }
-            if (claim == null)
-            {
-                throw new ArgumentNullException(nameof(claim));
-            }
-            if (newClaim == null)
-            {
-                throw new ArgumentNullException(nameof(newClaim));
-            }
-
-            //var matchedUserClaims = await _userClaims.Include(uc => uc.ClaimEntity)
-            //    .Where(uc => uc.UserId.Equals(user.Id) &&
-            //                 uc.ClaimEntity.ClaimValue == claim.Value &&
-            //                 uc.ClaimEntity.ClaimType == claim.Type)
-            //    .ToListAsync(cancellationToken);
-
-            //foreach (var matchedUserClaim in matchedUserClaims)
-            //{
-            //    var userClaim = matchedUserClaim.ClaimEntity;
-
-            //    userClaim.ClaimValue = newClaim.Value;
-            //    userClaim.ClaimType = newClaim.Type;
-            //}
-        }
-
-        public async Task RemoveClaimsAsync(User user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
-        {
-            ThrowIfDisposed();
-            if (user == null)
-            {
-                throw new ArgumentNullException(nameof(user));
-            }
-            if (claims == null)
-            {
-                throw new ArgumentNullException(nameof(claims));
-            }
-
-            //var allClaimsForUser = await _userClaims.Where(uc => uc.UserId == user.Id)
-            //    .Include(uc => uc.ClaimEntity)
-            //    .ToListAsync(cancellationToken);
-
-            //foreach (var claim in claims)
-            //{
-            //    var matchedClaims = allClaimsForUser.Where(uc => uc.ClaimEntity.ClaimValue == claim.Value && uc.ClaimEntity.ClaimType == claim.Type);
-            //    foreach (var matchedClaim in matchedClaims)
-            //    {
-            //        allClaimsForUser.Remove(matchedClaim);
-            //    }
-            //}
-        }
-
-        public async Task<IList<User>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            ThrowIfDisposed();
-            if (claim == null)
-            {
-                throw new ArgumentNullException(nameof(claim));
-            }
-
-            var usersForClaim = _userClaims.Include(uc => uc.ClaimEntity)
-                .Include(uc => uc.User)
-                .Include(uc => uc.ClaimEntity).ThenInclude(c => c.ClaimType)
-                .Include(uc => uc.ClaimEntity).ThenInclude(c => c.ClaimValue)
-                .Where(uc => uc.ClaimEntity.ClaimType.Value == claim.Type && uc.ClaimEntity.ClaimValue.Value == claim.Value)
-                .Select(uc => uc.User);
-
-            return await usersForClaim.ToListAsync(cancellationToken);
-        }
-
+        
         public Task SetEmailAsync(User user, string email, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
