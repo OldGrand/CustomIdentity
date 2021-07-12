@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using AutoMapper;
 using CustomIdentity.BLL.Models.Permissions;
 using CustomIdentity.BLL.Services.Interfaces;
