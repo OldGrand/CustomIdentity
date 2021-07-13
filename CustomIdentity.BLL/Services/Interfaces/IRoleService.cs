@@ -12,7 +12,5 @@ namespace CustomIdentity.BLL.Services.Interfaces
         Task DeleteRoleAsync(int roleId);
         Task DeleteRolesRangeAsync(IEnumerable<int> roleIds);
         IAsyncEnumerable<Role> GetAllRolesAsync();
-        Task<Role> GetRoleAsync(int roleId);
-        IAsyncEnumerable<Role> GetRolesForUser(Guid userId);
     }
 }

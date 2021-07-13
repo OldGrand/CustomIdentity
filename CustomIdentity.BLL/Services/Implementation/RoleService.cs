@@ -65,21 +65,5 @@ namespace CustomIdentity.BLL.Services.Implementation
             var roleEntities = _roles.AsAsyncEnumerable();
             return roleEntities;
         }
-
-        public Task<Role> GetRoleAsync(int roleId)
-        {
-            var taskRoleEntity = _roles.FirstAsync(r => r.Id == roleId);
-            return taskRoleEntity;
-        }
-        
-        public IAsyncEnumerable<Role> GetRolesForUser(Guid userId)
-        {
-            var userWithIncludedRoles = _userRoles.Where(ur => ur.UserId == userId)
-                .Include(ur => ur.Role)
-                .Select(ur => ur.Role)
-                .AsAsyncEnumerable();
-
-            return userWithIncludedRoles;
-        }
     }
 }
