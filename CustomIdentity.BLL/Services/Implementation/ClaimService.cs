@@ -99,7 +99,7 @@ namespace CustomIdentity.BLL.Services.Implementation
         public Task DeleteClaimValueAsync(int claimValueId)
         {
             var claimValueToArray = new[] { claimValueId };
-            return DeleteClaimTypeRangeAsync(claimValueToArray);
+            return DeleteClaimValueRangeAsync(claimValueToArray);
         }
 
         public async Task DeleteClaimValueRangeAsync(IEnumerable<int> claimValueIds)
