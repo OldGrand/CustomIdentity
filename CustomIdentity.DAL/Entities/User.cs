@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using CustomIdentity.DAL.Entities.Interfaces;
 using Microsoft.AspNetCore.Identity;
 
 namespace CustomIdentity.DAL.Entities
 {
-    public class User : IUser<Guid>
+    public class User
     {
         public Guid Id { get; set; }
         
