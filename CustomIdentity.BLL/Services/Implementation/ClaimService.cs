@@ -158,11 +158,5 @@ namespace CustomIdentity.BLL.Services.Implementation
             var userClaimEntities = _claimEntities.AsAsyncEnumerable();
             return userClaimEntities;
         }
-
-        public Task<ClaimEntity> GetClaimAsync(int claimId)
-        {
-            var taskRoleEntity = _claimEntities.FirstAsync(r => r.Id == claimId);
-            return taskRoleEntity;
-        }
     }
 }
