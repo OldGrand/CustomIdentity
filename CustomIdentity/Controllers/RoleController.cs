@@ -22,12 +22,6 @@ namespace CustomIdentity.Controllers
             return Ok(_roleService.GetAllRolesAsync());
         }
 
-        [HttpGet]
-        public IActionResult GetRolesForUser(Guid userId)
-        {
-            return Ok(_roleService.GetRolesForUser(userId));
-        }
-
         [HttpPost]
         public async Task<IActionResult> CreateRole(string roleName)
         {

@@ -54,7 +54,7 @@ namespace CustomIdentity.BLL.Services.Implementation
             }
 
             var rolesIdList = model.RoleIds?.ToList();
-            if (rolesIdList == null || !rolesIdList.Any())
+            if (rolesIdList == null)
             {
                 throw new ArgumentNullException(nameof(model.RoleIds));
             }
@@ -65,27 +65,24 @@ namespace CustomIdentity.BLL.Services.Implementation
                 throw new ArgumentNullException("EntityNotFoundException");
             }
 
-            var existedRolesCount = _roles.Count(x => rolesIdList.Contains(x.Id));
-            if (rolesIdList.Count != existedRolesCount)
+            var existedUserRoles = _userRoles.Where(ur => ur.UserId == userEntity.Id);
+            _userRoles.RemoveRange(existedUserRoles);
+
+            if (rolesIdList.Any())
             {
-                throw new Exception("Таких ролей нету");
+                var existedRolesCount = _roles.Count(x => rolesIdList.Contains(x.Id));
+                if (rolesIdList.Count != existedRolesCount)
+                {
+                    throw new Exception("Таких ролей нету");
+                }
+
+                var userRolesToCreate = rolesIdList.Select(r => new UserRole
+                {
+                    UserId = userEntity.Id,
+                    RoleId = r
+                });
+                await _userRoles.AddRangeAsync(userRolesToCreate);
             }
-
-            var existedUserRoles = await _userRoles.Where(ur => ur.UserId == userEntity.Id)
-                .ToListAsync();
-            var rolesIdsToUserRoles = rolesIdList.Select(r => new UserRole
-            {
-                UserId = userEntity.Id,
-                RoleId = r
-            }).ToList();
-
-            var userRoleEqualityComparer = new UserRoleEqualityComparer();
-
-            var userRolesToDelete = existedUserRoles.Except(rolesIdsToUserRoles, userRoleEqualityComparer);
-            _userRoles.RemoveRange(userRolesToDelete);
-
-            var userRolesToCreate = rolesIdsToUserRoles.Except(existedUserRoles, userRoleEqualityComparer);
-            await _userRoles.AddRangeAsync(userRolesToCreate);
 
             await _dbContext.SaveChangesAsync();
         }
