@@ -12,12 +12,12 @@ namespace CustomIdentity.BLL.Infrastructure.Comparers
             if (ReferenceEquals(x, null)) return false;
             if (ReferenceEquals(y, null)) return false;
             if (x.GetType() != y.GetType()) return false;
-            return x.UserClaimId == y.UserClaimId && x.RoleId == y.RoleId;
+            return x.ClaimEntityId == y.ClaimEntityId && x.RoleId == y.RoleId;
         }
 
         public int GetHashCode(RoleClaim obj)
         {
-            return HashCode.Combine(obj.UserClaimId, obj.RoleId);
+            return HashCode.Combine(obj.ClaimEntityId, obj.RoleId);
         }
     }
 }

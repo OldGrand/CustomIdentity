@@ -80,7 +80,7 @@ namespace CustomIdentity.DAL
 
             modelBuilder.Entity<RoleClaim>(b =>
             {
-                b.HasKey(ur => new { ur.RoleId, ur.UserClaimId });
+                b.HasKey(ur => new { ur.RoleId, ur.ClaimEntityId });
             });
 
             modelBuilder.Entity<Role>(b =>

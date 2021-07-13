@@ -10,7 +10,7 @@ namespace CustomIdentity.BLL.Services.Interfaces
     {
         IAsyncEnumerable<Role> GetRolesForUser(Guid userId);
         Task AddOrUpdateClaimsToRoleAsync(RoleClaimsUpdateModel model);
-        IAsyncEnumerable<RoleClaim> GetClaimsForRoleAsync(int roleId);
+        IAsyncEnumerable<ClaimEntity> GetClaimsForRoleAsync(int roleId);
         Task AddOrUpdateUserRolesAsync(UserRolesUpdateModel model);
         Task AddOrUpdateUserClaimsAsync(UserClaimUpdateModel model);
         IAsyncEnumerable<UserClaim> GetClaimsForUserAsync(Guid userId);

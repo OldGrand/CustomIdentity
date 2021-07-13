@@ -29,6 +29,12 @@ namespace CustomIdentity.Controllers
             return Ok(_permissionService.GetClaimsForUserAsync(userId));
         }
 
+        [HttpGet]
+        public IActionResult GetClaimsForRole(int roleId)
+        {
+            return Ok(_permissionService.GetClaimsForRoleAsync(roleId));
+        }
+
         [HttpPut]
         public async Task<IActionResult> ChangeUserClaims(UserClaimUpdateModel model)
         {

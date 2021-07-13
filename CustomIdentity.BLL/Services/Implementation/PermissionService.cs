@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CustomIdentity.BLL.Extensions;
 using CustomIdentity.BLL.Infrastructure.Comparers;
 using CustomIdentity.BLL.Models.Permissions;
 using CustomIdentity.BLL.Services.Interfaces;
@@ -70,8 +69,8 @@ namespace CustomIdentity.BLL.Services.Implementation
 
             if (rolesIdList.Any())
             {
-                var existedRolesCount = _roles.Count(x => rolesIdList.Contains(x.Id));
-                if (rolesIdList.Count != existedRolesCount)
+                var existRolesCount = await _roles.CountAsync(x => rolesIdList.Contains(x.Id));
+                if (existRolesCount != rolesIdList.Count)
                 {
                     throw new Exception("Таких ролей нету");
                 }
@@ -87,9 +86,11 @@ namespace CustomIdentity.BLL.Services.Implementation
             await _dbContext.SaveChangesAsync();
         }
 
-        public IAsyncEnumerable<RoleClaim> GetClaimsForRoleAsync(int roleId)
+        public IAsyncEnumerable<ClaimEntity> GetClaimsForRoleAsync(int roleId)
         {
             var claimsForRole = _roleClaims.Where(rc => rc.RoleId == roleId)
+                .Include(rc => rc.ClaimEntity)
+                .Select(rc => rc.ClaimEntity)
                 .AsAsyncEnumerable();
 
             return claimsForRole;
@@ -103,33 +104,33 @@ namespace CustomIdentity.BLL.Services.Implementation
             }
 
             var claimsIdList = model.ClaimIds?.ToList();
-            if (claimsIdList == null || !claimsIdList.Any())
+            if (claimsIdList == null)
             {
                 throw new ArgumentNullException(nameof(model.ClaimIds));
             }
 
             var roleEntity = await _roles.FirstAsync(r => r.Id == model.RoleId);
 
-            var isAllNewClaimIdsExist = await _claimEntities.AllAsync(x => claimsIdList.Contains(x.Id));
-            if (!isAllNewClaimIdsExist)
+            var existedRoleClaims = _roleClaims.Where(rc => rc.RoleId == roleEntity.Id);
+            _roleClaims.RemoveRange(existedRoleClaims);
+
+            if (claimsIdList.Any())
             {
-                throw new Exception("Таких клаймов нету");
+                var existClaimsCount = await _claimEntities.CountAsync(x => claimsIdList.Contains(x.Id));
+                if (existClaimsCount != claimsIdList.Count)
+                {
+                    throw new Exception("Таких клаймов нету");
+                }
+
+                var claimIdsToRoleClaim = claimsIdList.Select(c => new RoleClaim
+                {
+                    RoleId = roleEntity.Id,
+                    ClaimEntityId = c
+                });
+                await _roleClaims.AddRangeAsync(claimIdsToRoleClaim);
             }
 
-            var existedRoleClaims = await GetClaimsForRoleAsync(roleEntity.Id).ToListAsync();
-            var claimIdsToRoleClaim = claimsIdList.Select(c => new RoleClaim
-            {
-                RoleId = roleEntity.Id,
-                UserClaimId = c
-            }).ToList();
-
-            var roleClaimEqualityComparer = new RoleClaimEqualityComparer();
-
-            var claimsToDelete = existedRoleClaims.Except(claimIdsToRoleClaim, roleClaimEqualityComparer);
-            _roleClaims.RemoveRange(claimsToDelete);
-
-            var claimsToCreate = claimIdsToRoleClaim.Except(existedRoleClaims, roleClaimEqualityComparer);
-            await _roleClaims.AddRangeAsync(claimsToCreate);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task AddOrUpdateUserClaimsAsync(UserClaimUpdateModel model)

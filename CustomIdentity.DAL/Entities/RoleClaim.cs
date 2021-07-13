@@ -2,8 +2,8 @@
 {
     public class RoleClaim
     {
-        public int UserClaimId { get; set; }
-        public ClaimEntity UserClaim  { get; set; }
+        public int ClaimEntityId { get; set; }
+        public ClaimEntity ClaimEntity  { get; set; }
 
         public int RoleId { get; set; }
         public Role Role { get; set; }
