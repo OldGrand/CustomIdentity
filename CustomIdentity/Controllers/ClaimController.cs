@@ -53,9 +53,9 @@ namespace CustomIdentity.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteClaimValue(string claimValue)
+        public async Task<IActionResult> DeleteClaimValue(int claimValueId)
         {
-            await _claimService.DeleteClaimValueAsync(claimValue);
+            await _claimService.DeleteClaimValueAsync(claimValueId);
 
             return Ok();
         }

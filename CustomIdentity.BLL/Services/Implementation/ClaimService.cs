@@ -56,21 +56,21 @@ namespace CustomIdentity.BLL.Services.Implementation
 
         public Task DeleteClaimTypeAsync(int claimTypeId)
         {
-            var roleToArray = new[] { claimTypeId };
-            return DeleteClaimTypeRangeAsync(roleToArray);
+            var claimTypeToArray = new[] { claimTypeId };
+            return DeleteClaimTypeRangeAsync(claimTypeToArray);
         }
 
         public async Task DeleteClaimTypeRangeAsync(IEnumerable<int> claimTypeIds)
         {
-            var existedRoles = await _claimTypes.Where(r => claimTypeIds.Contains(r.Id))
+            var existedClaimTypes = await _claimTypes.Where(r => claimTypeIds.Contains(r.Id))
                 .ToListAsync();
 
-            if (existedRoles.Count != claimTypeIds.Count())
+            if (existedClaimTypes.Count != claimTypeIds.Count())
             {
                 throw new Exception("чего-то не хватает");
             }
 
-            _claimTypes.RemoveRange(existedRoles);
+            _claimTypes.RemoveRange(existedClaimTypes);
             await _dbContext.SaveChangesAsync();
         }
 
@@ -96,19 +96,26 @@ namespace CustomIdentity.BLL.Services.Implementation
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteClaimValueAsync(string claimValue)
+        public Task DeleteClaimValueAsync(int claimValueId)
         {
-            if (string.IsNullOrEmpty(claimValue))
+            var claimValueToArray = new[] { claimValueId };
+            return DeleteClaimTypeRangeAsync(claimValueToArray);
+        }
+
+        public async Task DeleteClaimValueRangeAsync(IEnumerable<int> claimValueIds)
+        {
+            var existedClaimValues = await _claimValues.Where(r => claimValueIds.Contains(r.Id))
+                .ToListAsync();
+
+            if (existedClaimValues.Count != claimValueIds.Count())
             {
-                throw new ArgumentNullException(nameof(claimValue));
+                throw new Exception("чего-то не хватает");
             }
 
-            var claimValueEntity = await _claimValues.FirstAsync(ct => ct.Value == claimValue);
-
-            _claimValues.Remove(claimValueEntity);
+            _claimValues.RemoveRange(existedClaimValues);
             await _dbContext.SaveChangesAsync();
         }
-        
+
         public async Task CreateClaimAsync(ClaimCreateModel model)
         {
             if (model == null)
