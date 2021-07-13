@@ -13,6 +13,6 @@ namespace CustomIdentity.BLL.Services.Interfaces
         IAsyncEnumerable<ClaimEntity> GetClaimsForRoleAsync(int roleId);
         Task AddOrUpdateUserRolesAsync(UserRolesUpdateModel model);
         Task AddOrUpdateUserClaimsAsync(UserClaimUpdateModel model);
-        IAsyncEnumerable<UserClaim> GetClaimsForUserAsync(Guid userId);
+        IAsyncEnumerable<ClaimEntity> GetClaimsForUserAsync(Guid userId);
     }
 }

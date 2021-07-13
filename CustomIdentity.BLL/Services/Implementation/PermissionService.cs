@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CustomIdentity.BLL.Infrastructure.Comparers;
 using CustomIdentity.BLL.Models.Permissions;
 using CustomIdentity.BLL.Services.Interfaces;
 using CustomIdentity.DAL;
@@ -133,11 +132,28 @@ namespace CustomIdentity.BLL.Services.Implementation
             await _dbContext.SaveChangesAsync();
         }
 
+        public IAsyncEnumerable<ClaimEntity> GetClaimsForUserAsync(Guid userId)
+        {
+            var userClaims = _userClaims.Where(uc => uc.UserId == userId)
+                .Include(uc => uc.ClaimEntity).ThenInclude(c => c.ClaimType)
+                .Include(uc => uc.ClaimEntity).ThenInclude(c => c.ClaimValue)
+                .Select(uc => uc.ClaimEntity)
+                .AsAsyncEnumerable();
+
+            return userClaims;
+        }
+
         public async Task AddOrUpdateUserClaimsAsync(UserClaimUpdateModel model)
         {
             if (model == null)
             {
                 throw new ArgumentNullException(nameof(model));
+            }
+
+            var claimsIdList = model.ClaimIds?.ToList();
+            if (claimsIdList == null)
+            {
+                throw new Exception();
             }
 
             var userEntity = await _userManager.FindByIdAsync(model.UserId.ToString());
@@ -146,43 +162,26 @@ namespace CustomIdentity.BLL.Services.Implementation
                 throw new Exception("EntityNotFoundException");
             }
 
-            var claimsIdList = model.ClaimIds?.ToList();
-            if (claimsIdList == null || !claimsIdList.Any())
+            var existedUserClaims = _userClaims.Where(uc => uc.UserId == userEntity.Id);
+            _userClaims.RemoveRange(existedUserClaims);
+
+            if (claimsIdList.Any())
             {
-                throw new Exception();
+                var existClaimsCount = await _claimEntities.CountAsync(uc => claimsIdList.Contains(uc.Id));
+                if (existClaimsCount != claimsIdList.Count)
+                {
+                    throw new Exception("Таких клаймов нету");
+                }
+
+                var claimIdsToUserClaim = claimsIdList.Select(c => new UserClaim
+                {
+                    UserId = userEntity.Id,
+                    ClaimEntityId = c
+                });
+                await _userClaims.AddRangeAsync(claimIdsToUserClaim);
             }
 
-            var isAllClaimIdsExist = await _userClaims.AllAsync(uc => claimsIdList.Contains(uc.ClaimEntityId));
-            if (!isAllClaimIdsExist)
-            {
-                throw new Exception("Таких клаймов нету");
-            }
-
-            var existedUserClaims = await _userClaims.Where(uc => uc.UserId == userEntity.Id)
-                .ToListAsync();
-            var claimIdsToUserClaim = claimsIdList.Select(c => new UserClaim
-            {
-                UserId = userEntity.Id,
-                ClaimEntityId = c
-            }).ToList();
-
-            var userClaimEqualityComparer = new UserClaimEqualityComparer();
-
-            var claimsToDelete = existedUserClaims.Except(claimIdsToUserClaim, userClaimEqualityComparer);
-            _userClaims.RemoveRange(claimsToDelete);
-
-            var claimsToCreate = claimIdsToUserClaim.Except(existedUserClaims, userClaimEqualityComparer);
-            await _userClaims.AddRangeAsync(claimsToCreate);
-        }
-
-        public IAsyncEnumerable<UserClaim> GetClaimsForUserAsync(Guid userId)
-        {
-            var userClaims = _userClaims.Where(uc => uc.UserId == userId)
-                .Include(uc => uc.ClaimEntity).ThenInclude(c => c.ClaimType)
-                .Include(uc => uc.ClaimEntity).ThenInclude(c => c.ClaimValue)
-                .AsAsyncEnumerable();
-
-            return userClaims;
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CustomIdentity.BLL.Infrastructure.Comparers;
 using CustomIdentity.BLL.Models.Permissions;
 using CustomIdentity.BLL.Services.Interfaces;
 using CustomIdentity.DAL;
