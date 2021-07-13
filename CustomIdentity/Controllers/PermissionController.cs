@@ -18,6 +18,12 @@ namespace CustomIdentity.Controllers
         }
 
         [HttpGet]
+        public IActionResult GetRolesForUser(Guid userId)
+        {
+            return Ok(_permissionService.GetRolesForUser(userId));
+        }
+
+        [HttpGet]
         public IActionResult GetClaimsForUser(Guid userId)
         {
             return Ok(_permissionService.GetClaimsForUserAsync(userId));
