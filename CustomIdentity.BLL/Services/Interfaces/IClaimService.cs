@@ -9,7 +9,7 @@ namespace CustomIdentity.BLL.Services.Interfaces
     {
         IAsyncEnumerable<ClaimType> GetAllClaimTypesAsync();
         Task CreateClaimTypeAsync(string claimTypeValue);
-        Task DeleteClaimTypeAsync(string claimType);
+        Task DeleteClaimTypeAsync(int claimTypeId);
         IAsyncEnumerable<ClaimValue> GetAllClaimValuesAsync();
         Task CreateClaimValueAsync(string claimValue);
         Task DeleteClaimValueAsync(string claimValue);

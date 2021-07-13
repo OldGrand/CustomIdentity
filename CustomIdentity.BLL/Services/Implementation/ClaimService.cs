@@ -54,16 +54,23 @@ namespace CustomIdentity.BLL.Services.Implementation
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteClaimTypeAsync(string claimType)
+        public Task DeleteClaimTypeAsync(int claimTypeId)
         {
-            if (string.IsNullOrEmpty(claimType))
+            var roleToArray = new[] { claimTypeId };
+            return DeleteClaimTypeRangeAsync(roleToArray);
+        }
+
+        public async Task DeleteClaimTypeRangeAsync(IEnumerable<int> claimTypeIds)
+        {
+            var existedRoles = await _claimTypes.Where(r => claimTypeIds.Contains(r.Id))
+                .ToListAsync();
+
+            if (existedRoles.Count != claimTypeIds.Count())
             {
-                throw new ArgumentNullException(nameof(claimType));
+                throw new Exception("чего-то не хватает");
             }
 
-            var claimTypeEntity = await _claimTypes.FirstAsync(ct => ct.Value == claimType);
-
-            _claimTypes.Remove(claimTypeEntity);
+            _claimTypes.RemoveRange(existedRoles);
             await _dbContext.SaveChangesAsync();
         }
 
